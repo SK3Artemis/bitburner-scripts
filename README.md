@@ -1,5 +1,4 @@
-# Broken rn
-# can't be bothered to fix it
+# Broken rn, can't be bothered to fix it
 
 # Downloading the whole repository
 
