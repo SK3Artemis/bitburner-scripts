@@ -1,5 +1,7 @@
 # Downloading the whole repository
 
+`wget https://raw.githubusercontent.com/sk3artemis/bitburner-scripts/master/git-pull.js git-pull.js`
+
 If you manually `nano git-pull.js` from the terminal and copy the [contents of that script](https://raw.githubusercontent.com/alainbryden/bitburner-scripts/main/git-pull.js), you should be able to run it once and download the rest of the files I use. Early-game, many will be useless because they are only enabled by late-game features, but they shouldn't give you too many problems just being there.
 
 # Running scripts
