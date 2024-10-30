@@ -53,7 +53,7 @@ const argsSchema = [
     ['initial-study-time', 10], // Seconds. Set to 0 to not do any studying at startup. By default, if early in an augmentation, will start with a little study to boost hack XP
     ['initial-hack-xp-time', 10], // Seconds. Set to 0 to not do any hack-xp grinding at startup. By default, if early in an augmentation, will start with a little study to boost hack XP
     ['disable-script', []], // The names of scripts that you do not want run by our scheduler
-    ['run-script', []], // The names of additional scripts that you want daemon to run on home
+    ['run-script', ['stats.js','infiltrate.js','Plasma.js']], // The names of additional scripts that you want daemon to run on home
 ];
 
 export function autocomplete(data, args) {
