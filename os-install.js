@@ -1,7 +1,7 @@
 let options;
 const argsSchema = [
     ['github', 'SK3Artemis'],
-    ['repository', 'bitburner-scripts'],
+    ['repository', 'Bitburner_os'],
     ['branch', 'main'],
     ['download', []], // By default, all supported files in the repository will be downloaded. Override with just a subset of files here
     ['new-file', []], // If a repository listing fails, only files returned by ns.ls() will be downloaded. You can add additional files to seek out here.
@@ -40,12 +40,11 @@ export async function main(ns) {
         else
             ns.tprint(`WARNING: "${fullLocalFilePath}" was not updated. (Currently running, or not located at ${remoteFilePath}?)`)
     }
-    ns.tprint(`[Edit by SK_] ` +
+    ns.tprint(`[Edit by SK_Artemis] ` +
               
-              `INFO: Pull complete. If you have any questions or issues, head over to the Bitburner #alains-scripts Discord channel: ` +
-              `https://discord.com/channels/415207508303544321/935667531111342200` +
+              `INFO: Pull complete. To start, type: "run os/main.js" ` +
               
-              `To start, type: "run autopilot.js" `);
+              `To Install bb-vue type: "run install.js" `);
     // Remove any temp files / scripts from the prior version
     ns.run(pathJoin(options.subfolder, `cleanup.js`));
 }

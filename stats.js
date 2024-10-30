@@ -4,7 +4,7 @@ import {
 } from './helpers.js'
 
 const argsSchema = [
-    ['show-peoplekilled', false],
+    ['show-peoplekilled', true],
     ['hide-stocks', false],
     ['hide-RAM-utilization', false],
 ];
@@ -48,9 +48,7 @@ export async function main(ns) {
 
             // update HUD elements with info collected above.
             for (const [header, show, formattedValue, toolTip] of hudData) {
-                // Ensure values are never shown glued to the header by adding a non-breaking space to the left of each. 
-                const paddedValue = formattedValue == null ? null : ' ' + formattedValue?.trim();
-                updateHudElement(header, show, paddedValue, toolTip)
+                updateHudElement(header, show, formattedValue, toolTip)
             }
         } catch (err) {
             // Might run out of ram from time to time, since we use it dynamically
@@ -61,8 +59,6 @@ export async function main(ns) {
     }
 }
 
-/** Creates the new UI elements which we will be adding custom HUD data to. 
- * @param {HudRowConfig[]} hudData */
 function prepareHudElements(hudData) {
     const newline = (id, txt, toolTip = "") => {
         const p = doc.createElement("p");
@@ -78,7 +74,7 @@ function prepareHudElements(hudData) {
         return p;
     }
 
-    for (const [header, _, value, toolTip] of hudData) {
+    for (const [header, visible, value, toolTip] of hudData) {
         const id = makeID(header)
         hook0.appendChild(newline(id + "-title", header.padEnd(9, " "), toolTip))
         hook1.appendChild(newline(id + "-value", value, toolTip))
@@ -89,11 +85,6 @@ function makeID(header) {
     return header.replace(" ", "") ?? "empty-header"
 }
 
-/** Creates the new UI elements which we will be adding custom HUD data to.
- * @param {string} header - The stat name which appears in the first column of the custom HUD row
- * @param {boolean} visible - Indicates whether the current HUD row should be displayed (true) or hidden (false)
- * @param {string} value - The value to display in the second column of the custom HUD row
- * @param {string} toolTip - The tooltip to display if the user hovers over this HUD row with their cursor. */
 function updateHudElement(header, visible, value, toolTip) {
     const id = makeID(header),
         valId = id + "-value",
@@ -115,16 +106,7 @@ function updateHudElement(header, visible, value, toolTip) {
     }
 }
 
-/** @param {NS} ns
- * @param {number} bitNode the current bitnode the user is in
- * @param {{[k: number]: number}} dictSourceFiles The source files the user has unlocked so far
- * @param {(string | boolean)[][]} options The run configuration of this script.
- * @typedef {string} header - The stat name which appears in the first column of the custom HUD row
- * @typedef {boolean} show - Indicates whether the current HUD row should be displayed (true) or hidden (false)
- * @typedef {string} formattedValue - The value to display in the second column of the custom HUD row
- * @typedef {string} toolTip - The tooltip to display if the user hovers over this HUD row with their cursor.
- * @typedef {[header, show, formattedValue, toolTip]} HudRowConfig The configuration for a custom row displayed in the HUD
- * @returns {Promise<HudRowConfig[]>} **/
+/** @param {NS} ns **/
 async function getHudData(ns, bitNode, dictSourceFiles, options) {
     const hudData = [];
 
@@ -169,8 +151,8 @@ async function getHudData(ns, bitNode, dictSourceFiles, options) {
     }
 
     // Show total instantaneous script income and experience per second (values provided directly by the game)
-    hudData.push(["Scr Inc", true, formatMoney(ns.getTotalScriptIncome()[0], 3, 2) + '/sec', "Total 'instantaneous' income per second being earned across all scripts running on all servers."]);
-    hudData.push(["Scr Exp", true, formatNumberShort(ns.getTotalScriptExpGain(), 3, 2) + '/sec', "Total 'instantaneous' hack experience per second being earned across all scripts running on all servers."]);
+    hudData.push(["Scr Inc", true, formatMoney(ns.getTotalScriptIncome()[0], 3, 2) + '/sec', "Total 'instantenous' income per second being earned across all scripts running on all servers."]);
+    hudData.push(["Scr Exp", true, formatNumberShort(ns.getTotalScriptExpGain(), 3, 2) + '/sec', "Total 'instantenous' hack experience per second being earned across all scripts running on all servers."]);
 
     // Show reserved money
     {
@@ -306,7 +288,7 @@ async function getHudData(ns, bitNode, dictSourceFiles, options) {
         // Bitburner bug: Trace amounts of share power sometimes left over after we stop sharing
         if (sharePower > 1.0001) {
             val.push(true, formatNumberShort(sharePower, 3, 2),
-                "Uses RAM to boost faction reputation gain rate while working for factions (tapers off at ~1.65) " +
+                "Uses RAM to boost faction reputation gain rate while working for factions (capped at 1.5) " +
                 "\nRun `daemon.js` with the `--no-share` flag to disable.");
         } else val.push(false)
         hudData.push(val)
@@ -315,8 +297,6 @@ async function getHudData(ns, bitNode, dictSourceFiles, options) {
     return hudData
 }
 
-/** @param {number} value
- *  @returns {string} The number formatted as a string with up to 6 significant digits, but no more than the specified number of decimal places. */
 function formatSixSigFigs(value, minDecimalPlaces = 0, maxDecimalPlaces = 0) {
     return value >= 1E7 ? formatNumberShort(value, 6, 3) :
         value.toLocaleString(undefined, { minimumFractionDigits: minDecimalPlaces, maximumFractionDigits: maxDecimalPlaces });
@@ -335,7 +315,6 @@ async function getAllServersInfo(ns) {
     return await getNsDataThroughFile(ns, 'ns.args.map(ns.getServer)', '/Temp/getServers.txt', serverNames);
 }
 
-/** Inject the CSS that controls how custom HUD elements are displayed. */
 function addCSS(doc) {
     let priorCss = doc.getElementById("statsCSS");
     if (priorCss) priorCss.parentNode.removeChild(priorCss); // Remove old CSS to facilitate tweaking css above
