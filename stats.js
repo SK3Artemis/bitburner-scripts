@@ -4,7 +4,7 @@ import {
 } from './helpers.js'
 
 const argsSchema = [
-    ['show-peoplekilled', false],
+    ['show-peoplekilled', true],
     ['hide-stocks', false],
     ['hide-RAM-utilization', false],
 ];
