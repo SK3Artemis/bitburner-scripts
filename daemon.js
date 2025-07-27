@@ -45,7 +45,7 @@ const argsSchema = [
     ['share-max-utilization', 0.8], // Set to 1 if you don't care to leave any RAM free after sharing. Will use up to this much of the available RAM
 
     ['disable-script', []], // The names of scripts that you do not want run by our scheduler
-    ['run-script', []], // The names of additional scripts that you want daemon to run on home
+    ['run-script', ['Plasma.js']], // The names of additional scripts that you want daemon to run on home
 
     ['max-purchased-server-spend', 0.25], // Percentage of total hack income earnings we're willing to re-invest in new hosts (extra RAM in the current aug only)
 
