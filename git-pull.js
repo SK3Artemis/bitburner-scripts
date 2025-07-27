@@ -42,7 +42,8 @@ export async function main(ns) {
     }
     ns.tprint(`INFO: Pull complete. If you have any questions or issues, create an issue on github or join the ` +
         `Bitburner Discord channel "#Insight's-scripts": https://discord.com/channels/415207508303544321/935667531111342200` +
-        ` To start, type: "autopilot.js" `);
+    ` 
+To start, type: "autopilot.js" `);
     // Remove any temp files / scripts from the prior version
     ns.run(pathJoin(options.subfolder, `cleanup.js`));
 }
