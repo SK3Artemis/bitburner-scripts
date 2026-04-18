@@ -107,6 +107,8 @@ export async function main(ns) {
     let bnCompletionSuppressed = false; // Flag if we've detected that we've won the BN, but are suppressing a restart
     let sleevesMaxedOut = false; // Flag used only when the player is replaying BN 10 with all sleeves but has suppressed auto-destroying the BN, to allow continued auto-installs
     let loggedBnCompletion = false; // Flag set to ensure that if we choose to stay in the BN, we only log the "BN completed" message once per reset.
+    let have4STixApi = false; // Whether we have access to the 4S (stockmarket) API. Once confirmed true, we can stop checking.
+    let have4SData = false; // Whether we have access to 4S (stockmarket) data. Once confirmed true, we can stop checking.
 
     // Replacements for player properties deprecated since 2.3.0
     function getTimeInAug() { return Date.now() - resetInfo.lastAugReset; }
@@ -874,7 +876,11 @@ export async function main(ns) {
         // If we are in Daedalus, and we do not yet have enough favour to unlock rep donations with Daedalus,
         // but we DO have enough rep to earn that favor on our next restart, trigger an install immediately (need at least 1 aug)
         // (doesn't apply in BN8, since we can immediately donate to all factions)
-        if (player.factions.includes("Daedalus") && bitNodeMults.RepToDonateToFaction !== 0 && ns.read("/Temp/Daedalus-donation-rep-attained.txt")) {
+        if (
+            player.factions.includes("Daedalus") &&
+            bitNodeMults.FavorToDonateToFaction !== 0 &&
+            ns.read("/Temp/Daedalus-donation-rep-attained.txt")
+        ) {
             shouldReset = true;
             resetStatus = `We have enough reputation with Daedalus to unlock donations on our next reset.\n${resetStatus}`;
             if (totalCost == 0) totalCost = 1; // Hack, logic below expects some non-zero reserve in preparation for ascending.
@@ -975,11 +981,12 @@ export async function main(ns) {
         if (await checkIfGrafting(ns))
             return true;
         // Are we close to being able to afford 4S TIX data?
-        if (!options['disable-wait-for-4s'] && !(await getNsDataThroughFile(ns, `ns.stock.has4SDataTIXAPI()`))) {
+        if (!have4STixApi) have4STixApi = await getNsDataThroughFile(ns, `ns.stock.has4SDataTixApi()`);
+        if (!options['disable-wait-for-4s'] && !have4STixApi) {
+            if (!have4SData) have4SData = await getNsDataThroughFile(ns, `ns.stock.has4SData()`);
             const totalWorth = player.money + await getStocksValue(ns);
-            const has4S = await getNsDataThroughFile(ns, `ns.stock.has4SData()`);
             const totalCost = 25E9 * bitNodeMults.FourSigmaMarketDataApiCost +
-                (has4S ? 0 : 1E9 * bitNodeMults.FourSigmaMarketDataCost);
+                (have4SData ? 0 : 1E9 * bitNodeMults.FourSigmaMarketDataCost);
             const ratio = totalWorth / totalCost;
             // If we're e.g. 50% of the way there, hold off, regardless of the '--wait-for-4s' setting
             // TODO: If ratio is > 1, we can afford it - but stockmaster won't buy until it has e.g. 20% more than the cost

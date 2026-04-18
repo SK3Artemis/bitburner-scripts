@@ -1057,8 +1057,8 @@ export async function main(ns) {
 
         // Hack: Below concerns aren't related to "server data", but are things we also wish to refresh just once in a while
         // Determine whether we have purchased stock API accesses yet (affects reserving and attempts to manipulate stock markets)
-        haveTixApi = haveTixApi || await getNsDataThroughFile(ns, `ns.stock.hasTIXAPIAccess()`);
-        have4sApi = have4sApi || await getNsDataThroughFile(ns, `ns.stock.has4SDataTIXAPI()`);
+        haveTixApi = haveTixApi || await getNsDataThroughFile(ns, `ns.stock.hasTixApiAccess()`);
+        have4sApi = have4sApi || await getNsDataThroughFile(ns, `ns.stock.has4SDataTixApi()`);
         // If required, determine the current terminal server (used when intelligence farming)
         if (options.i)
             currentTerminalServer = getServerByName(await getNsDataThroughFile(ns, 'ns.singularity.getCurrentServer()'));
@@ -1107,7 +1107,7 @@ export async function main(ns) {
         canHack() { return this.requiredHackLevel <= playerHackSkill(); }
         shouldHack() {
             return this.getMaxMoney() > 0 && this.name !== "home" && !this.name.startsWith('hacknet-server-') && !this.name.startsWith('hacknet-node-') &&
-                !this.name.startsWith(purchasedServersName); // Hack, but beats wasting 2.25 GB on ns.getPurchasedServers()
+                !this.name.startsWith(purchasedServersName); // Hack, but beats wasting 1.05 GB on ns.cloud.getServerNames()
         }
         // "Prepped" means current security is at the minimum, and current money is at the maximum
         isPrepped() {

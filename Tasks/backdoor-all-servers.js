@@ -33,17 +33,18 @@ export async function main(ns) {
             for (j of (await getNsDataThroughFile(ns, `ns.scan(ns.args[0])`, null, [servers[i]])))
                 if (!servers.includes(j)) servers.push(j), routes[j] = routes[servers[i]].slice(), routes[j].push(j);
 
+        // Filter out servers that cannot or should not be hacked / backdoored
+        const hackableServers = servers.filter(s => s != "home" && !s.includes("hacknet-") && !s.includes("daemon")) /*or whatever you name your purchased servers*/
+
         // Get the required hacking level of each server
         const dictRequiredHackingLevels = await getNsDataThroughFile(ns,
             `Object.fromEntries(ns.args.map(server => [server, ns.getServerRequiredHackingLevel(server)]))`,
-            '/Temp/getServerRequiredHackingLevel-all.txt', servers);
+            '/Temp/getServerRequiredHackingLevel-all.txt', hackableServers);
         // Get the root status for each server
         const dictRootAccess = await getNsDataThroughFile(ns,
             `Object.fromEntries(ns.args.map(server => [server, ns.hasRootAccess(server)]))`,
-            '/Temp/hasRootAccess-all.txt', servers);
+            '/Temp/hasRootAccess-all.txt', hackableServers);
 
-        // Filter out servers that cannot or should not be hacked / backdoored
-        let hackableServers = servers.filter(s => s != "home" && !s.includes("hacknet-") && !s.includes("daemon")) /*or whatever you name your purchased servers*/
         ns.print(`${hackableServers.length} not-owned servers on the network.`);
         ns.print(`${hackableServers.filter(s => dictRootAccess[s]).length} servers are currently rooted.`);
         ns.print(`${hackableServers.filter(s => myHackingLevel > dictRequiredHackingLevels[s]).length} servers are within our hack level (${myHackingLevel}).`);

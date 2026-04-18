@@ -38,7 +38,7 @@ export function autocomplete(data, _) {
 }
 
 /** Note: In addition to this script's RAM footprint (2.7 GB last this was updated)
- *        This script requires 3.85 GB of DYNAMIC RAM (2.25 GB (for purchaseServer) + 1.6 GB Base Cost) used by getNsDataThroughFile)
+ *        This script requires 3.85 GB of DYNAMIC RAM (2.25 GB (for cloud.purchaseServer) + 1.6 GB Base Cost) used by getNsDataThroughFile)
  * @param {NS} ns **/
 export async function main(ns) {
     const runOptions = getConfiguration(ns, argsSchema);
@@ -47,18 +47,18 @@ export async function main(ns) {
     ns.disableLog('ALL')
 
     // Get the maximum number of purchased servers in this bitnode
-    maxPurchasedServers = await getNsDataThroughFile(ns, 'ns.getPurchasedServerLimit()');
+    maxPurchasedServers = await getNsDataThroughFile(ns, 'ns.cloud.getServerLimit()');
     log(ns, `INFO: Max purchasable servers has been detected as ${maxPurchasedServers.toFixed(0)}.`);
     if (maxPurchasedServers == 0)
         return log(ns, `INFO: Shutting down due to host purchasing being disabled in this BN...`);
 
     // Get the maximum size of purchased servers in this bitnode
-    const purchasedServerMaxRam = await getNsDataThroughFile(ns, 'ns.getPurchasedServerMaxRam()');
+    const purchasedServerMaxRam = await getNsDataThroughFile(ns, 'ns.cloud.getRamLimit()');
     maxPurchasableServerRamExponent = Math.log2(purchasedServerMaxRam);
     log(ns, `INFO: Max purchasable RAM has been detected as 2^${maxPurchasableServerRamExponent} (${formatRam(2 ** maxPurchasableServerRamExponent)}).`);
 
-    // Gather one-time info in advance about how much RAM each size of server costs (Up to 2^30 to be future-proof, but we expect everything abouve 2^20 to be Infinity)
-    costByRamExponent = await getNsDataThroughFile(ns, 'Object.fromEntries([...Array(30).keys()].map(i => [i, ns.getPurchasedServerCost(2**i)]))', '/Temp/host-costs.txt');
+    // Gather one-time info in advance about how much RAM each size of server costs (Up to 2^30 to be future-proof, but we expect everything above 2^20 to be Infinity)
+    costByRamExponent = await getNsDataThroughFile(ns, 'Object.fromEntries([...Array(30).keys()].map(i => [i, ns.cloud.getServerCost(2**i)]))', '/Temp/host-costs.txt');
 
     keepRunning = options.c || options['run-continuously'];
     pctReservedMoney = options['reserve-percent'];
@@ -88,7 +88,7 @@ export async function main(ns) {
     if (!keepRunning)
         log(ns, `host-manager will run once. Run with argument "-c" to run continuously.`)
     do {
-        absReservedMoney = options['absolute-reserve'] != null ? options['absolute-reserve'] : Number(ns.read("reserve.txt") || 0);
+        absReservedMoney = options['absolute-reserve'] != null ? Number(options['absolute-reserve']) : Number(ns.read("reserve.txt") || 0);
         await tryToBuyBestServerPossible(ns);
         if (keepRunning)
             await ns.sleep(options['interval']);
@@ -108,8 +108,8 @@ async function tryToBuyBestServerPossible(ns) {
     let rootedServers = await getNsDataThroughFile(ns, 'scanAllServers(ns).filter(s => ns.hasRootAccess(s))', '/Temp/rooted-servers.txt');
     // Gether the list of all purchased servers.
     let purchasedServers = null;
-    try { purchasedServers = await getNsDataThroughFile(ns, 'ns.getPurchasedServers()', null, null, null, 3, 5, /* silent errors */ true); } catch { /* Ignore */ }
-    if (purchasedServers == null) // Early game, if we have insufficient RAM (2.25 GB getPurchasedServers + 1.6 base cost), we can fall-back to guessing based on their name
+    try { purchasedServers = await getNsDataThroughFile(ns, 'ns.cloud.getServerNames()', null, null, null, 3, 5, /* silent errors */ true); } catch { /* Ignore */ }
+    if (purchasedServers == null) // Early game, if we have insufficient RAM (1.05 GB cloud.getServerNames + 1.6 base cost), we can fall-back to guessing based on their name
         purchasedServers = rootedServers.filter(s => s.startsWith(purchasedServerName));
     // If some of the servers are hacknet servers, and they aren't being used for scripts, ignore the RAM they have available
     // with the assumption that these are reserved for generating hashes
@@ -226,10 +226,10 @@ async function tryToBuyBestServerPossible(ns) {
 
         cost -= costByRamExponent[Math.log2(worstServerRam)]
         isUpgrade = true
-        purchasedServer = (await getNsDataThroughFile(ns, `ns.upgradePurchasedServer(ns.args[0], ns.args[1])`, null,
+        purchasedServer = (await getNsDataThroughFile(ns, `ns.cloud.upgradeServer(ns.args[0], ns.args[1])`, null,
             [worstServerName, maxRamPossibleToBuy])) ? worstServerName : "";
     } else {
-        purchasedServer = await getNsDataThroughFile(ns, `ns.purchaseServer(ns.args[0], ns.args[1])`, null,
+        purchasedServer = await getNsDataThroughFile(ns, `ns.cloud.purchaseServer(ns.args[0], ns.args[1])`, null,
             [purchasedServerName, maxRamPossibleToBuy]);
     }
     if (!purchasedServer)

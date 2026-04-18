@@ -408,9 +408,15 @@ export async function main(ns) {
         let attempts = 0;
         let errMessage = '';
         while (attempts++ <= 5) {
-            eval("window").onbeforeunload = null; // Disable the unsaved changes warning before reloading
+            const win = eval("window");
+            win.onbeforeunload = null; // Disable the unsaved changes warning before reloading
             await ns.sleep(options['save-sleep-time']); // Yield execution for an instant incase the game needs to finish a save or something
-            location.reload(); // Force refresh the page without saving
+            if (attempts < 2)
+                win.location = win.location; // Force refresh the page without saving
+            else if (attempts < 3)
+                win.location.reload(); // Another approach that may work when the above does not.
+            else if (attempts < 4)
+                win.location.reload(true);
             await ns.sleep(10000); // Keep the script alive to be safe. Presumably the page reloads before this completes.
             errMessage = `casino.js asked the game to reload ${attempts} times, but it didn't.`
             log(ns, `WARNING: ${errMessage} Trying again...`, true, 'warning');
